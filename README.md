@@ -54,7 +54,7 @@ with seqioFile("out.fq", "w") as f:
 ### Create a file handle
 
 ```python
-seqioFile(path: str, mode: "r" | "w" = "r", compressed: bool = False)
+seqioFile(path: str, mode: 'r' | 'w' = 'r', compressed: bool = False)
 ```
 
 - `path`: input/output file path. Use `"-"` for stdin/stdout.
@@ -65,7 +65,7 @@ seqioFile(path: str, mode: "r" | "w" = "r", compressed: bool = False)
 
 Notes:
 - If `path` ends with `.gz`, compression is enabled automatically.
-- Iteration consumes the file. Use `reset()` to read again.
+- Iteration consumes the file sequentially. To re-read from the beginning, call `reset()`.
 
 ### Read methods
 
@@ -92,7 +92,7 @@ Validation:
 
 ```python
 file.set_write_options(
-    lineWidth=80,            # optional, > 0
+    lineWidth=80,            # optional; when provided it must be > 0
     includeComments=True,    # optional
     baseCase="upper",       # optional: "upper" or "lower"
 )
