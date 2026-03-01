@@ -20,3 +20,4 @@ test-cigar
 .xmake
 .zig-*
 zig-out
+site/

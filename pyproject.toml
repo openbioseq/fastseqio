@@ -17,6 +17,9 @@ requires = ["setuptools>=65.5", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
+dev = [
+    "zensical>=0.0.2",
+]
 test = [
     "pytest>=8.3.4",
 ]
