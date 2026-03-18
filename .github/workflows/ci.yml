@@ -17,8 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [38, 39, 310, 311, 312, 313]
-        manylinux-image: [manylinux2014]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         arch: [x86_64, aarch64]
 
     steps:
@@ -58,8 +57,6 @@ jobs:
           CIBW_BUILD: "cp${{ matrix.python-version }}-*"
           CIBW_SKIP: "*musllinux*"
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_MANYLINUX_*_IMAGE: ${{ matrix.manylinux-image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux-image }}
 
   test-on-windows:
     name: Build wheels on Windows for ${{ matrix.arch }}
@@ -67,7 +64,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [38, 39, 310, 311, 312, 313]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         arch: [AMD64]
 
     steps:
@@ -100,15 +97,13 @@ jobs:
           CIBW_BUILD: "cp${{ matrix.python-version }}-*"
           CIBW_SKIP: "*musllinux*"
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_MANYLINUX_*_IMAGE: ${{ matrix.manylinux-image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux-image }}
 
   test-on-macos:
     name: Build wheels on MacOS for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [38, 39, 310, 311, 312, 313]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         arch: [x86_64, arm64]
         os: [macos-latest]
 
@@ -144,5 +139,3 @@ jobs:
           CIBW_BUILD: "cp${{ matrix.python-version }}-*"
           CIBW_SKIP: "*musllinux*"
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_MANYLINUX_*_IMAGE: ${{ matrix.manylinux-image }}
-          CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux-image }}
