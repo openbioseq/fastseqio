@@ -2,7 +2,7 @@ from typing import Literal
 
 from .fastseqio import seqioFile, Record
 
-__all__ = ["seqioFile", "Record", "open"]
+__all__ = ["seqioFile", "Record", "open", "close"]
 
 
 def open(
@@ -10,3 +10,6 @@ def open(
 ) -> seqioFile:
     return seqioFile(path, mode, compressed)
 
+
+def close(file: seqioFile) -> None:
+    file.close()
