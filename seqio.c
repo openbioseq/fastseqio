@@ -1,5 +1,6 @@
 #include "seqio.h"
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
@@ -579,15 +580,20 @@ ensureFastaRecord(seqioFile* sf, const char* msg)
 }
 
 static inline void
-readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
+readUntil(seqioFile* sf,
+          seqioString* s,
+          char untilChar,
+          size_t minLen,
+          readStatus nextStatus)
 {
+  size_t len = 0;
   while (1) {
     size_t readSize = readDataToBuffer(sf);
     if (readSize == 0) {
       break;
     }
     char* buff = sf->buffer.data + sf->buffer.offset;
-    if (buff[0] == untilChar) {
+    if (buff[0] == untilChar && (!minLen || len >= minLen)) {
       sf->buffer.offset++;
       sf->buffer.left--;
       sf->pravite.state = nextStatus;
@@ -596,6 +602,7 @@ readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
     char* sep_stop = memchr(buff, '\n', sf->buffer.left);
     if (sep_stop == NULL) {
       seqioStringAppend(s, buff, sf->buffer.left);
+      len += sf->buffer.left;
       sf->buffer.left = 0;
       sf->buffer.offset = 0;
       continue;
@@ -612,10 +619,12 @@ readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
     sf->buffer.left -= sep + 1;
     sf->buffer.offset += sep + 1;
     seqioStringAppend(s, buff, sep);
+    len += sep;
   }
 }
 
-// Read until one of two delimiter characters, optimized for name/comment reading
+// Read until one of two delimiter characters, optimized for name/comment
+// reading
 static inline char
 readUntilEither(seqioFile* sf, seqioString* s, char delim1, char delim2)
 {
@@ -625,7 +634,7 @@ readUntilEither(seqioFile* sf, seqioString* s, char delim1, char delim2)
       return '\0';
     }
     char* buff = sf->buffer.data + sf->buffer.offset;
-    
+
     // Find the first occurrence of either delimiter
     size_t i;
     for (i = 0; i < sf->buffer.left; i++) {
@@ -633,14 +642,14 @@ readUntilEither(seqioFile* sf, seqioString* s, char delim1, char delim2)
         break;
       }
     }
-    
+
     // Append the chunk before the delimiter
     if (i > 0) {
       seqioStringAppend(s, buff, i);
       sf->buffer.offset += i;
       sf->buffer.left -= i;
     }
-    
+
     // Check if we found a delimiter
     if (i < readSize) {
       char found = sf->buffer.data[sf->buffer.offset];
@@ -704,26 +713,6 @@ seqioReadFasta(seqioFile* sf, seqioRecord* record)
       case READ_STATUS_NONE: {
         if (c == '>') {
           status = READ_STATUS_NAME;
-          // Use optimized batch reading for name
-          char delim = readUntilEither(sf, record->name, ' ', '\n');
-          record->name->data[record->name->length] = '\0';
-          if (delim == ' ') {
-            status = READ_STATUS_COMMENT;
-            // Use optimized batch reading for comment
-            delim = readUntilEither(sf, record->comment, '\n', '\n');
-            record->comment->data[record->comment->length] = '\0';
-            status = READ_STATUS_SEQUENCE;
-          } else if (delim == '\n') {
-            status = READ_STATUS_SEQUENCE;
-          }
-          // Now read sequence
-          if (status == READ_STATUS_SEQUENCE) {
-            readUntil(sf, record->sequence, '>', READ_STATUS_NAME);
-            record->sequence->data[record->sequence->length] = '\0';
-            sf->record = (seqioRecord*)record;
-            seqioTell(sf);
-            return record;
-          }
         }
         break;
       }
@@ -753,7 +742,7 @@ seqioReadFasta(seqioFile* sf, seqioRecord* record)
       case READ_STATUS_SEQUENCE: {
         // back to the first char of this line
         backwardBufferOne(sf);
-        readUntil(sf, record->sequence, '>', READ_STATUS_NAME);
+        readUntil(sf, record->sequence, '>', 0, READ_STATUS_NAME);
         record->sequence->data[record->sequence->length] = '\0';
         sf->record = (seqioRecord*)record;
         seqioTell(sf);
@@ -818,45 +807,6 @@ seqioReadFastq(seqioFile* sf, seqioRecord* record)
       case READ_STATUS_NONE: {
         if (c == '@') {
           status = READ_STATUS_NAME;
-          // Use optimized batch reading for name
-          char delim = readUntilEither(sf, record->name, ' ', '\n');
-          record->name->data[record->name->length] = '\0';
-          if (delim == ' ') {
-            status = READ_STATUS_COMMENT;
-            // Use optimized batch reading for comment
-            delim = readUntilEither(sf, record->comment, '\n', '\n');
-            record->comment->data[record->comment->length] = '\0';
-            status = READ_STATUS_SEQUENCE;
-          } else if (delim == '\n') {
-            status = READ_STATUS_SEQUENCE;
-          }
-          // Now read sequence
-          if (status == READ_STATUS_SEQUENCE) {
-            readUntil(sf, record->sequence, '+', READ_STATUS_ADD);
-            record->sequence->data[record->sequence->length] = '\0';
-            status = READ_STATUS_ADD;
-            // Skip the '+' line
-            while (1) {
-              readSize = readDataToBuffer(sf);
-              if (readSize == 0) break;
-              buff = sf->buffer.data + sf->buffer.offset;
-              for (size_t j = 0; j < sf->buffer.left; j++) {
-                forwardBufferOne(sf);
-                if (buff[j] == '\n') {
-                  status = READ_STATUS_QUALITY;
-                  goto read_quality;
-                }
-              }
-            }
-read_quality:
-            if (status == READ_STATUS_QUALITY) {
-              readUntil(sf, record->quality, '@', READ_STATUS_NAME);
-              record->quality->data[record->quality->length] = '\0';
-              sf->record = (seqioRecord*)record;
-              seqioTell(sf);
-              return record;
-            }
-          }
         }
         break;
       }
@@ -885,7 +835,7 @@ read_quality:
       }
       case READ_STATUS_SEQUENCE: {
         backwardBufferOne(sf);
-        readUntil(sf, record->sequence, '+', READ_STATUS_ADD);
+        readUntil(sf, record->sequence, '+', 0, READ_STATUS_ADD);
         record->sequence->data[record->sequence->length] = '\0';
         status = READ_STATUS_ADD;
         backwardBufferOne(sf); // back to '+' line
@@ -903,7 +853,8 @@ read_quality:
       }
       case READ_STATUS_QUALITY: {
         backwardBufferOne(sf);
-        readUntil(sf, record->quality, '@', READ_STATUS_NAME);
+        readUntil(sf, record->quality, '@', record->sequence->length,
+                  READ_STATUS_NAME);
         record->quality->data[record->quality->length] = '\0';
         sf->record = (seqioRecord*)record;
         seqioTell(sf);
