@@ -1,5 +1,5 @@
 import os
-
+import tempfile
 from fastseqio import seqioFile, Record
 
 
@@ -138,3 +138,92 @@ def test_seqiofile_size_offset():
     fp.read()
 
     assert file.offset == fp.tell()
+
+
+def mock_fastq():
+    _, tmp_path = tempfile.mkstemp(suffix=".fastq")
+    with open(tmp_path, "w") as fp:
+        fp.write("@a c1\n")
+        fp.write("AAAAAAAAAAAAA\n")
+        fp.write("+\n")
+        fp.write("IIIIIIIIIIIII\n")
+
+        fp.write("@b      \n")
+        fp.write("GGGGGGGGGGGGG\n")
+        fp.write("+\n")
+        fp.write("JJJJJ@JJJJJJJ\n")
+
+        fp.write("@c\n")
+        fp.write("CCCCCCCCCCCC\n")
+        fp.write("+\n")
+        fp.write("@@@@KKKKKKKC\n")
+
+    return tmp_path
+
+
+def test_read_fastq():
+
+    fastq_path = mock_fastq()
+
+    file = seqioFile(fastq_path)
+    records = []
+    for record in file:
+        records.append(record)
+
+    for record in records:
+        print(record.name, record.sequence, record.quality)
+
+    assert len(records) == 3
+    assert records[0].name == "a"
+    assert records[0].comment == "c1"
+    assert records[0].sequence == "AAAAAAAAAAAAA"
+    assert records[0].quality == "IIIIIIIIIIIII"
+    assert records[1].name == "b"
+    assert records[1].comment is None
+    assert records[1].sequence == "GGGGGGGGGGGGG"
+    assert records[1].quality == "JJJJJ@JJJJJJJ"
+    assert records[2].name == "c"
+    assert records[2].comment is None
+    assert records[2].sequence == "CCCCCCCCCCCC"
+    assert records[2].quality == "@@@@KKKKKKKC"
+
+    os.remove(fastq_path)
+
+
+def mock_fasta():
+    _, tmp_path = tempfile.mkstemp(suffix=".fa")
+    with open(tmp_path, "w") as fp:
+        fp.write(">a   \n")
+        fp.write("ACGGGGGGGTTTT\n")
+        fp.write("AAAAAAAAAAAAA\n")
+
+        fp.write(">b cb\n")
+        fp.write("ACGGGGGGGTTTT\n")
+
+        fp.write(">c c ccc cccc\n")
+        fp.write("ACGGGGGGGTTTT\n")
+
+    return tmp_path
+
+
+def test_read_fasta():
+
+    fasta_path = mock_fasta()
+
+    file = seqioFile(fasta_path)
+    records = []
+    for record in file:
+        records.append(record)
+
+    assert len(records) == 3
+    assert records[0].name == "a"
+    assert records[0].comment is None
+    assert records[0].sequence == "ACGGGGGGGTTTTAAAAAAAAAAAAA"
+    assert records[1].name == "b"
+    assert records[1].comment == "cb"
+    assert records[1].sequence == "ACGGGGGGGTTTT"
+    assert records[2].name == "c"
+    assert records[2].comment == "c ccc cccc"
+    assert records[2].sequence == "ACGGGGGGGTTTT"
+
+    os.remove(fasta_path)
