@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <zconf.h>
 #include <zlib.h>
 
 seqioOpenOptions __defaultStdinOptions = {
@@ -237,6 +238,32 @@ seqioStringAppendChar(seqioString* string, char c)
   }
   string->data[string->length] = c;
   string->length += 1;
+}
+
+static inline void
+seqioStringStrip(seqioString* s, char stripChar)
+{
+  if (s == NULL || s->length == 0) {
+    return;
+  }
+  size_t start = 0;
+  size_t end = s->length - 1;
+  while (start <= end && s->data[start] == stripChar) {
+    start++;
+  }
+  while (end >= start && s->data[end] == stripChar) {
+    end--;
+  }
+  if (start > end) {
+    s->length = 0;
+    s->data[0] = '\0';
+    return;
+  }
+  if (start > 0) {
+    memmove(s->data, s->data + start, end - start + 1);
+  }
+  s->length = end - start + 1;
+  s->data[s->length] = '\0';
 }
 
 typedef enum {
@@ -580,11 +607,7 @@ ensureFastaRecord(seqioFile* sf, const char* msg)
 }
 
 static inline void
-readUntil(seqioFile* sf,
-          seqioString* s,
-          char untilChar,
-          size_t minLen,
-          readStatus nextStatus)
+readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
 {
   size_t len = 0;
   while (1) {
@@ -593,7 +616,7 @@ readUntil(seqioFile* sf,
       break;
     }
     char* buff = sf->buffer.data + sf->buffer.offset;
-    if (buff[0] == untilChar && (!minLen || len >= minLen)) {
+    if (buff[0] == untilChar && len > 0) {
       sf->buffer.offset++;
       sf->buffer.left--;
       sf->pravite.state = nextStatus;
@@ -730,10 +753,9 @@ seqioReadFasta(seqioFile* sf, seqioRecord* record)
         break;
       }
       case READ_STATUS_COMMENT: {
-        // This state should not be reached with optimized reading
         if (c == '\n') {
           status = READ_STATUS_SEQUENCE;
-          record->comment->data[record->comment->length] = '\0';
+          seqioStringStrip(record->comment, ' ');
         } else {
           seqioStringAppendChar(record->comment, c);
         }
@@ -742,7 +764,7 @@ seqioReadFasta(seqioFile* sf, seqioRecord* record)
       case READ_STATUS_SEQUENCE: {
         // back to the first char of this line
         backwardBufferOne(sf);
-        readUntil(sf, record->sequence, '>', 0, READ_STATUS_NAME);
+        readUntil(sf, record->sequence, '>', READ_STATUS_NAME);
         record->sequence->data[record->sequence->length] = '\0';
         sf->record = (seqioRecord*)record;
         seqioTell(sf);
@@ -811,7 +833,6 @@ seqioReadFastq(seqioFile* sf, seqioRecord* record)
         break;
       }
       case READ_STATUS_NAME: {
-        // Fallback for character-by-character reading
         if (c == ' ') {
           status = READ_STATUS_COMMENT;
           record->name->data[record->name->length] = '\0';
@@ -824,10 +845,9 @@ seqioReadFastq(seqioFile* sf, seqioRecord* record)
         break;
       }
       case READ_STATUS_COMMENT: {
-        // Fallback for character-by-character reading
         if (c == '\n') {
           status = READ_STATUS_SEQUENCE;
-          record->comment->data[record->comment->length] = '\0';
+          seqioStringStrip(record->comment, ' ');
         } else {
           seqioStringAppendChar(record->comment, c);
         }
@@ -835,7 +855,7 @@ seqioReadFastq(seqioFile* sf, seqioRecord* record)
       }
       case READ_STATUS_SEQUENCE: {
         backwardBufferOne(sf);
-        readUntil(sf, record->sequence, '+', 0, READ_STATUS_ADD);
+        readUntil(sf, record->sequence, '+', READ_STATUS_ADD);
         record->sequence->data[record->sequence->length] = '\0';
         status = READ_STATUS_ADD;
         backwardBufferOne(sf); // back to '+' line
@@ -853,8 +873,7 @@ seqioReadFastq(seqioFile* sf, seqioRecord* record)
       }
       case READ_STATUS_QUALITY: {
         backwardBufferOne(sf);
-        readUntil(sf, record->quality, '@', record->sequence->length,
-                  READ_STATUS_NAME);
+        readUntil(sf, record->quality, '@', READ_STATUS_NAME);
         record->quality->data[record->quality->length] = '\0';
         sf->record = (seqioRecord*)record;
         seqioTell(sf);
