@@ -36,7 +36,7 @@ else:
 
 setuptools.setup(
     name="fastseqio",
-    version="0.2.1",
+    version="0.2.2",
     author="dwpeng",
     author_email="1732889554@qq.com",
     license="MIT",
@@ -45,4 +45,5 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(where="./python/src"),
     package_dir={"": "./python/src"},
     ext_modules=extension,
+    zip_safe=True,
 )

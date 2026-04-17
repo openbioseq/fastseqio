@@ -1,25 +1,22 @@
 [project]
 name = "fastseqio"
-version = "0.2.1"
+version = "0.2.2"
 description = "A package for reading and writing fasta/fastq files"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [{ name = "dwpeng", email = "1732889554@qq.com" }]
 dependencies = []
-license = { file = "LICENSE" }
+license = "MIT"
 
 [project.urls]
 homepage = "https://github.com/dwpeng/fastseqio"
 repository = "https://github.com/dwpeng/fastseqio"
 
 [build-system]
-requires = ["setuptools>=65.5", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
-dev = [
-    "zensical>=0.0.2",
-]
 test = [
     "pytest>=8.3.4",
 ]
