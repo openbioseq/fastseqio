@@ -13,7 +13,7 @@ homepage = "https://github.com/dwpeng/fastseqio"
 repository = "https://github.com/dwpeng/fastseqio"
 
 [build-system]
-requires = ["setuptools>=77.0", "wheel"]
+requires = ["setuptools>=65.5", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
