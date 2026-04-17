@@ -11,6 +11,7 @@ license = { file = "LICENSE" }
 [project.urls]
 homepage = "https://github.com/dwpeng/fastseqio"
 repository = "https://github.com/dwpeng/fastseqio"
+documentation = "https://openbioseq.github.io/fastseqio/"
 
 [build-system]
 requires = ["setuptools>=65.5", "wheel"]
