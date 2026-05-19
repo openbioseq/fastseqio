@@ -1,4 +1,6 @@
-# fastseqio (Python)
+> Documentation: https://openbioseq.github.io/fastseqio/
+
+# fastseqio 
 
 `fastseqio` is a Python library for fast reading and writing of FASTA/FASTQ files.
 It supports plain text and gzip-compressed files (`.gz`) and provides a small, practical API centered on:
