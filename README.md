@@ -94,9 +94,9 @@ Validation:
 
 ```python
 file.set_write_options(
-    lineWidth=80,            # optional; when provided it must be > 0
-    includeComments=True,    # optional
-    baseCase="upper",       # optional: "upper" or "lower"
+    lineWidth=80,  # optional; when provided it must be > 0
+    includeComments=True,  # optional
+    baseCase="upper",  # optional: "upper" or "lower"
 )
 ```
 
@@ -144,8 +144,8 @@ Example:
 from fastseqio import Record
 
 r = Record("id", "AAACCCGGGTTT")
-print(r.hpc())            # ACGT
-print(list(r.kmers(4)))   # ['AAAC', 'AACC', ...]
+print(r.hpc())  # ACGT
+print(list(r.kmers(4)))  # ['AAAC', 'AACC', ...]
 ```
 
 ---
