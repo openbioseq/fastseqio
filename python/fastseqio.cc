@@ -364,6 +364,36 @@ private:
   seqioRecord* record;
 };
 
+class seqioKmerIteratorImpl {
+public:
+  seqioRecord* record;
+  size_t kmerSize;
+  size_t currentPos;
+  char* kmer;
+
+  seqioKmerIteratorImpl(std::shared_ptr<seqioRecordImpl> r, size_t kmerSize)
+  {
+    this->record = r->as_seqioRecord();
+    this->kmerSize = kmerSize;
+    this->currentPos = 0;
+    this->kmer = new char[kmerSize + 1];
+    this->kmer[kmerSize] = '\0';
+  }
+
+  pybind11::str
+  next()
+  {
+    if (currentPos + kmerSize > record->sequence->length) {
+      return pybind11::str("");
+    }
+    memcpy(this->kmer, record->sequence->data + currentPos, kmerSize);
+    currentPos++;
+    return pybind11::str(this->kmer);
+  }
+
+  ~seqioKmerIteratorImpl() { delete[] this->kmer; }
+};
+
 PYBIND11_MODULE(_fastseqio, m)
 {
   py::enum_<seqOpenMode>(m, "seqOpenMode")
@@ -405,6 +435,11 @@ PYBIND11_MODULE(_fastseqio, m)
           [](const py::tuple& tuple) {
             return seqioRecordPickleDeserialize(tuple);
           }));
+
+  py::class_<seqioKmerIteratorImpl, std::shared_ptr<seqioKmerIteratorImpl> >(
+      m, "seqioKmerIterator")
+      .def(py::init<std::shared_ptr<seqioRecordImpl>, size_t>())
+      .def("next", &seqioKmerIteratorImpl::next);
 
   py::class_<seqioFileImpl, std::shared_ptr<seqioFileImpl> >(m, "seqioFile")
       .def(py::init<std::string, seqOpenMode, bool>())

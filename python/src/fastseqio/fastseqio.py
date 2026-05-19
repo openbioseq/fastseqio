@@ -3,6 +3,7 @@ from _fastseqio import (
     seqOpenMode as _seqOpenMode,
     seqioRecord as _seqioRecord,
     seqioBaseCase as _seqioBaseCase,
+    seqioKmerIterator as _seqioKmerIterator,
 )
 
 from typing import Optional, Literal
@@ -22,20 +23,20 @@ class seqioBaseCase:
 
 
 class RecordKmerIterator:
-    def __init__(self, record: "Record", k: int):
-        self.__record = record
+    def __init__(self, ski: _seqioKmerIterator, k: int):
+        self.__iterator = ski
         self.__k = k
-        self.__index = 0
-        self.__len = len(record)
+
+    def ksize(self) -> int:
+        return self.__k
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.__index >= self.__len - self.__k + 1:
+        kmer = self.__iterator.next()
+        if kmer == "":
             raise StopIteration
-        kmer = self.__record.subseq(self.__index, self.__k)
-        self.__index += 1
         return kmer
 
 
@@ -250,7 +251,7 @@ class Record:
     def _raw(self) -> _seqioRecord:
         return self.__record
 
-    def kmers(self, k: int):
+    def kmers(self, k: int) -> RecordKmerIterator:
         """
         Generate k-mers of length k from the sequence.
 
@@ -279,11 +280,7 @@ class Record:
         """
         if k > len(self):
             raise ValueError("K must be less than the record length")
-        if k == len(self):
-            yield self.sequence
-            return
-        for kmer in RecordKmerIterator(self, k):
-            yield kmer
+        return RecordKmerIterator(_seqioKmerIterator(self._raw(), k), k)
 
 
 class seqioFile:
