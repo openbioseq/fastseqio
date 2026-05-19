@@ -59,12 +59,12 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
 
   test-on-windows:
-    name: Build wheels on Windows for ${{ matrix.arch }}
+    name: Windows for ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         arch: [AMD64]
 
     steps:
@@ -99,11 +99,11 @@ jobs:
           CIBW_ARCHS: ${{ matrix.arch }}
 
   test-on-macos:
-    name: Build wheels on MacOS for ${{ matrix.arch }}
+    name: MacOS ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         arch: [x86_64, arm64]
         os: [macos-latest]
 

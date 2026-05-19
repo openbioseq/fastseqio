@@ -6,12 +6,12 @@ on:
 
 jobs:
   build-on-linux:
-    name: Build wheels on Linux for ${{ matrix.arch }}
+    name: Linux ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         manylinux-image: [manylinux2014]
         arch: [x86_64, aarch64]
 
@@ -61,12 +61,12 @@ jobs:
         run: twine upload wheelhouse/*.whl
 
   build-on-windows:
-    name: Build wheels on Windows for ${{ matrix.arch }}
+    name: Windows for ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         arch: [AMD64]
 
     steps:
@@ -108,11 +108,11 @@ jobs:
         run: twine upload wheelhouse/*.whl
 
   build-on-macos:
-    name: Build wheels on MacOS for ${{ matrix.arch }}
+    name: MacOS ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         arch: [x86_64, arm64]
         os: [macos-latest]
 
