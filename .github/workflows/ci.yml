@@ -12,12 +12,12 @@ on:
 
 jobs:
   test-on-linux:
-    name: Build wheels on Linux for ${{ matrix.arch }}
+    name: Linux ${{ matrix.arch }} - Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [38, 39, 310, 311, 312, 313, 314]
+        python-version: [39, 310, 311, 312, 313, 314]
         arch: [x86_64, aarch64]
 
     steps:
