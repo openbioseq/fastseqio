@@ -30,7 +30,7 @@ jobs:
       - name: set zig
         uses: mlugg/setup-zig@v1
         with:
-          version: 0.13.0
+          version: 0.14.1
       - name: build static zlib for linux
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
@@ -78,7 +78,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v1
         with:
-          version: 0.13.0
+          version: 0.14.1
       - name: build static zlib for windows
         run: |
           zig build -Doptimize=ReleaseFast -Dtarget=x86_64-windows-msvc
@@ -117,7 +117,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v1
         with:
-          version: 0.13.0
+          version: 0.14.1
       - name: build static zlib for macos (amd64)
         if: ${{ matrix.arch == 'x86_64' }}
         run: |
