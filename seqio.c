@@ -363,9 +363,9 @@ seqioStats(seqioFile* sf)
 {
   if (sf->pravite.mode == seqOpenModeRead && sf->fromFile) {
     if (sf->pravite.options->isGzipped) {
-      gzseek((gzFile)sf->pravite.file, 0, SEEK_END);
-      sf->fileStats.fileSize = gztell((gzFile)sf->pravite.file);
-      gzseek((gzFile)sf->pravite.file, 0, SEEK_SET);
+      /* gzseek SEEK_END is not supported by zlib.
+         Decompressing the entire file to get size is too expensive.
+         Leave fileSize as 0 for gzip files. */
     } else {
       fseek((FILE*)sf->pravite.file, 0, SEEK_END);
       sf->fileStats.fileSize = ftell((FILE*)sf->pravite.file);
@@ -610,13 +610,14 @@ static inline void
 readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
 {
   size_t len = 0;
+  int atLineStart = 0;
   while (1) {
     size_t readSize = readDataToBuffer(sf);
     if (readSize == 0) {
       break;
     }
     char* buff = sf->buffer.data + sf->buffer.offset;
-    if (buff[0] == untilChar && len > 0) {
+    if (atLineStart && buff[0] == untilChar && len > 0) {
       sf->buffer.offset++;
       sf->buffer.left--;
       sf->pravite.state = nextStatus;
@@ -628,12 +629,14 @@ readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
       len += sf->buffer.left;
       sf->buffer.left = 0;
       sf->buffer.offset = 0;
+      atLineStart = 0;
       continue;
     }
     size_t sep = sep_stop - buff;
     if (!sep) {
       sf->buffer.left--;
       sf->buffer.offset++;
+      atLineStart = 1;
       continue;
     }
     if (buff[sep - 1] == '\r') {
@@ -643,6 +646,7 @@ readUntil(seqioFile* sf, seqioString* s, char untilChar, readStatus nextStatus)
     sf->buffer.offset += sep + 1;
     seqioStringAppend(s, buff, sep);
     len += sep;
+    atLineStart = 1;
   }
 }
 
