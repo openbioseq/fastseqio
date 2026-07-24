@@ -21,14 +21,14 @@ jobs:
         arch: [x86_64, aarch64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up QEMU
         if: ${{ matrix.arch == 'aarch64' }}
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v4
       - name: set zig
-        uses: mlugg/setup-zig@v1
+        uses: mlugg/setup-zig@v2
         with:
           version: 0.14.1
       - name: build static zlib for linux
@@ -40,7 +40,7 @@ jobs:
         run: |
           zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-gnu.2.17
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: 3.11
       - name: Install dependencies
@@ -68,15 +68,15 @@ jobs:
         arch: [AMD64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: 3.11
       - name: Setup Zig
-        uses: mlugg/setup-zig@v1
+        uses: mlugg/setup-zig@v2
         with:
           version: 0.14.1
       - name: build static zlib for windows
@@ -107,15 +107,15 @@ jobs:
         arch: [x86_64, arm64]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: 3.11
       - name: Setup Zig
-        uses: mlugg/setup-zig@v1
+        uses: mlugg/setup-zig@v2
         with:
           version: 0.14.1
       - name: build static zlib for macos (amd64)
