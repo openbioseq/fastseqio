@@ -28,7 +28,7 @@ jobs:
         if: ${{ matrix.arch == 'aarch64' }}
         uses: docker/setup-qemu-action@v1
       - name: set zig
-        uses: mlugg/setup-zig@v2
+        uses: mlugg/setup-zig@v1
         with:
           version: 0.13.0
       - name: build static zlib for linux
@@ -115,7 +115,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Setup Zig
-        uses: mlugg/setup-zig@v2
+        uses: mlugg/setup-zig@v1
         with:
           version: 0.13.0
           use-cache: ${{ matrix.arch != 'arm64' }}
