@@ -125,7 +125,28 @@ jobs:
       - name: build static zlib for macos (aarch64)
         if: ${{ matrix.arch == 'arm64' }}
         run: |
-          zig build -Doptimize=ReleaseFast -Dtarget=aarch64-macos.14.0
+          mkdir -p zig-out/lib zig-out/obj
+          for src in \
+            deps/zlib/adler32.c \
+            deps/zlib/compress.c \
+            deps/zlib/crc32.c \
+            deps/zlib/deflate.c \
+            deps/zlib/gzclose.c \
+            deps/zlib/gzlib.c \
+            deps/zlib/gzread.c \
+            deps/zlib/gzwrite.c \
+            deps/zlib/inflate.c \
+            deps/zlib/infback.c \
+            deps/zlib/inftrees.c \
+            deps/zlib/inffast.c \
+            deps/zlib/trees.c \
+            deps/zlib/uncompr.c \
+            deps/zlib/zutil.c
+          do
+            cc -O2 -std=c89 -Ideps/zlib -c "$src" -o "zig-out/obj/$(basename "${src%.c}.o")"
+          done
+          cc -O3 -std=c99 -Ideps/zlib -c seqio.c -o zig-out/obj/seqio.o
+          ar rcs zig-out/lib/libseqio.a zig-out/obj/*.o
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
