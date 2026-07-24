@@ -100,9 +100,10 @@ jobs:
 
   test-on-macos:
     name: MacOS ${{ matrix.arch }} - Python ${{ matrix.python-version }}
-    runs-on: ${{ matrix.arch == 'x86_64' && 'macos-13' || 'macos-latest' }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [macos-latest]
         python-version: [39, 310, 311, 312, 313, 314]
         arch: [x86_64, arm64]
 
