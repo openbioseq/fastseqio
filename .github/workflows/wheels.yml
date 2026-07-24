@@ -6,17 +6,17 @@ on:
 
 jobs:
   build-on-linux:
-    name: Linux ${{ matrix.arch }} - Python ${{ matrix.python-version }}
+    name: Build wheels on Linux for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [39, 310, 311, 312, 313, 314]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         manylinux-image: [manylinux2014]
         arch: [x86_64, aarch64]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up QEMU
@@ -35,7 +35,7 @@ jobs:
         run: |
           zig build -Doptimize=ReleaseFast -Dtarget=aarch64-linux-gnu.2.17
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
       - name: Install dependencies
@@ -61,20 +61,20 @@ jobs:
         run: twine upload wheelhouse/*.whl
 
   build-on-windows:
-    name: Windows for ${{ matrix.arch }} - Python ${{ matrix.python-version }}
+    name: Build wheels on Windows for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
-        python-version: [39, 310, 311, 312, 313, 314]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         arch: [AMD64]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
       - name: Setup Zig
@@ -108,20 +108,20 @@ jobs:
         run: twine upload wheelhouse/*.whl
 
   build-on-macos:
-    name: MacOS ${{ matrix.arch }} - Python ${{ matrix.python-version }}
+    name: Build wheels on MacOS for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [39, 310, 311, 312, 313, 314]
+        python-version: [38, 39, 310, 311, 312, 313, 314]
         arch: [x86_64, arm64]
         os: [macos-latest]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v4
         with:
           python-version: 3.11
       - name: Setup Zig
